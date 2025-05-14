@@ -1,7 +1,6 @@
 package app.ui;
 
 import app.context.EarlyBirdContext;
-import app.ui.MainMenuPanel;
 
 import javax.swing.*;
 import javax.swing.plaf.FontUIResource;
@@ -25,9 +24,10 @@ public class FrameMain extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        // 전체 시스템 구성
         this.context = new EarlyBirdContext();
 
-        // ✅ MainMenuPanel 생성 시 현재 프레임(this) 전달
+        // 메인 메뉴 패널 생성 및 스크롤 적용
         MainMenuPanel mainPanel = new MainMenuPanel(this, context);
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setBorder(null);
@@ -36,6 +36,10 @@ public class FrameMain extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * 전역 UI 스타일 설정
+     * - 폰트 및 색상 커스터마이징
+     */
     private void setGlobalUIStyle() {
         Font font = new Font("맑은 고딕", Font.PLAIN, 14);
         Enumeration<Object> keys = UIManager.getDefaults().keys();

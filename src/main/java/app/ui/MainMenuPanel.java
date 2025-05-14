@@ -11,13 +11,17 @@ import bird.ui.FrameBird;
 import bird.ui.SwingBirdMessageDisplayer;
 import todo.ui.FrameToDoCreate;
 import todo.ui.FrameToDoList;
-import todo.ui.FrameToDoView; // ✅ 추가
 import weather.ui.FrameWeatherView;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
 
+/**
+ * [MainMenuPanel]
+ * - EarlyBird의 메인 기능 버튼들이 배치된 메인 메뉴 패널
+ * - 각 버튼 클릭 시 해당 기능 화면으로 전환
+ */
 public class MainMenuPanel extends JPanel {
 
     private final EarlyBirdContext context;
@@ -70,26 +74,9 @@ public class MainMenuPanel extends JPanel {
 
         add(Box.createVerticalStrut(20));
 
-        // ✅ ToDo 작성 (일기 대신)
+        // ✅ ToDo 작성
         add(createButton("오늘 할 일 작성", "todo_icon.png", () ->
-                new FrameToDoCreate(
-                        context.toDoService,
-                        messageManager,
-                        context.bird,
-                        context.birdService
-                )
-        ));
-
-        add(Box.createVerticalStrut(20));
-
-        // ✅ ToDo 입력 (View 기반)
-        add(createButton("할 일 입력 (뷰 방식)", "todo_icon.png", () ->
-                new FrameToDoView(
-                        context.toDoService,
-                        messageManager,
-                        context.bird,
-                        context.birdService
-                )
+                new FrameToDoCreate(context.toDoService, messageManager)
         ));
 
         add(Box.createVerticalStrut(20));
@@ -109,6 +96,9 @@ public class MainMenuPanel extends JPanel {
         add(Box.createVerticalGlue()); // 하단 여백
     }
 
+    /**
+     * 공통 버튼 생성 로직
+     */
     private JButton createButton(String text, String iconName, Runnable action) {
         JButton button = new JButton(text, loadIcon(iconName));
         button.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
@@ -120,6 +110,9 @@ public class MainMenuPanel extends JPanel {
         return button;
     }
 
+    /**
+     * 아이콘 이미지 불러오기
+     */
     private ImageIcon loadIcon(String name) {
         URL resource = getClass().getClassLoader().getResource("img/" + name);
         if (resource == null) {

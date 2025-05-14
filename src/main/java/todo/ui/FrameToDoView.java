@@ -1,11 +1,8 @@
 package todo.ui;
 
 import bird.message.BirdMessageManager;
-import bird.model.Bird;
-import bird.service.BirdService;
 import todo.model.ToDo;
 import todo.service.ToDoService;
-import user.session.SessionManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,17 +17,10 @@ public class FrameToDoView extends JFrame {
 
     private final ToDoService toDoService;
     private final BirdMessageManager messageManager;
-    private final Bird bird;
-    private final BirdService birdService;
 
-    public FrameToDoView(ToDoService toDoService,
-                         BirdMessageManager messageManager,
-                         Bird bird,
-                         BirdService birdService) {
+    public FrameToDoView(ToDoService toDoService, BirdMessageManager messageManager) {
         this.toDoService = toDoService;
         this.messageManager = messageManager;
-        this.bird = bird;
-        this.birdService = birdService;
 
         setTitle("오늘의 할 일 ✍️");
         setSize(400, 350);
@@ -66,7 +56,7 @@ public class FrameToDoView extends JFrame {
         JButton saveButton = new JButton("저장하기");
         saveButton.setBackground(new Color(135, 206, 250));
         saveButton.addActionListener(e -> {
-            String username = SessionManager.getCurrentUser().getUsername();
+            String username = "gyeongsu"; // ✅ 나중에 SessionManager 적용
             String title = titleField.getText().trim();
             String content = contentArea.getText().trim();
             LocalDate today = LocalDate.now();
@@ -80,9 +70,6 @@ public class FrameToDoView extends JFrame {
             boolean success = toDoService.saveToDo(todo);
 
             if (success) {
-                // ✅ DB 기반 포인트 추가
-                birdService.addPoint(bird, 10);
-
                 JOptionPane.showMessageDialog(this, "✅ 저장 완료! 포인트 +10");
                 messageManager.say("오늘의 할 일이 등록되었어요!");
                 messageManager.speakRandom();

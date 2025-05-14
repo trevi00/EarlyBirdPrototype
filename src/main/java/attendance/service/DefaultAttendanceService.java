@@ -1,7 +1,7 @@
 package attendance.service;
 
 import attendance.repository.AttendanceRepository;
-import bird.repository.PointManager;
+import bird.point.PointManager;
 
 import java.time.LocalDate;
 

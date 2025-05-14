@@ -6,11 +6,7 @@ import attendance.service.AttendanceService;
 import attendance.service.DefaultAttendanceService;
 import bird.message.BirdMessageProvider;
 import bird.model.Bird;
-import bird.repository.BirdRepository;
-import bird.repository.JdbcBirdRepository;
-import bird.repository.PointManager;
-import bird.repository.PointRepository;
-import bird.repository.JdbcPointRepository;
+import bird.point.PointManager;
 import bird.service.BirdService;
 import bird.service.DefaultBirdService;
 import bird.service.StageEvolutionPolicy;
@@ -26,7 +22,6 @@ import todo.service.DefaultToDoService;
 import user.repository.JdbcUserRepository;
 import user.repository.UserRepository;
 import user.service.UserService;
-import user.session.SessionManager;
 import weather.cache.InMemoryWeatherCacheManager;
 import weather.cache.WeatherCacheManager;
 import weather.fetcher.OpenWeatherFetcher;
@@ -51,42 +46,38 @@ public class EarlyBirdContext {
     public final WeatherService weatherService;
     public final DiaryService diaryService;
     public final UserService userService;
-    public final ToDoService toDoService;
+    public final ToDoService toDoService; // ✅ 할 일 서비스
 
     public EarlyBirdContext() {
+        // 포인트 관리자
+        pointManager = new PointManager();
+
+        // DB 연결
         Connection conn = DatabaseConfig.getConnection();
 
-        // ✅ 사용자 ID (로그인 이후)
-        String userId = SessionManager.getCurrentUser().getUsername();
-
-        // ✅ 포인트 시스템
-        PointRepository pointRepo = new JdbcPointRepository(conn);
-        pointManager = new PointManager(pointRepo);
-
-        // ✅ 출석 시스템
+        // 출석 시스템 구성
         AttendanceRepository attendanceRepo = new JdbcAttendanceRepository(conn);
         attendanceService = new DefaultAttendanceService(attendanceRepo, pointManager);
 
-        // ✅ 새 시스템
-        BirdRepository birdRepo = new JdbcBirdRepository(conn);
-        birdService = new DefaultBirdService(new StageEvolutionPolicy(), birdRepo);
-        bird = birdService.loadBird(userId); // 🔥 DB에서 사용자별 새 상태 로드
+        // 새 시스템 구성
+        bird = new Bird();
+        birdService = new DefaultBirdService(new StageEvolutionPolicy());
         birdMessageProvider = new BirdMessageProvider();
 
-        // ✅ 날씨 시스템
+        // 날씨 시스템 구성 (캐시 + 외부 API)
         WeatherCacheManager cacheManager = new InMemoryWeatherCacheManager();
         WeatherFetcher fetcher = new OpenWeatherFetcher();
         weatherService = new DefaultWeatherService(cacheManager, fetcher);
 
-        // ✅ 일기 시스템
+        // 일기 시스템 구성
         DiaryRepository diaryRepo = new JdbcDiaryRepository(conn);
         diaryService = new DefaultDiaryService(diaryRepo);
 
-        // ✅ 사용자 시스템
+        // 사용자 시스템 구성
         UserRepository userRepo = new JdbcUserRepository(conn);
         userService = new UserService(userRepo);
 
-        // ✅ 할 일 시스템
+        // 할 일 시스템 구성
         ToDoRepository toDoRepo = new JdbcToDoRepository(conn);
         toDoService = new DefaultToDoService(toDoRepo, pointManager);
     }

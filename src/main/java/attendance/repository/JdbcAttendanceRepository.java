@@ -44,6 +44,7 @@ public class JdbcAttendanceRepository implements AttendanceRepository {
             pstmt.executeUpdate();
         } catch (SQLException e) {
             if (e.getMessage().contains("ORA-00001")) {
+                // 기본키 중복 (이미 출석한 경우)
                 System.out.println("이미 출석한 날짜입니다.");
             } else {
                 e.printStackTrace();

@@ -1,8 +1,6 @@
 package todo.ui;
 
 import bird.message.BirdMessageManager;
-import bird.model.Bird;
-import bird.service.BirdService;
 import todo.model.ToDo;
 import todo.service.ToDoService;
 import user.session.SessionManager;
@@ -20,15 +18,10 @@ public class FrameToDoCreate extends JFrame {
 
     private final ToDoService toDoService;
     private final BirdMessageManager messageManager;
-    private final Bird bird;
-    private final BirdService birdService;
 
-    public FrameToDoCreate(ToDoService toDoService, BirdMessageManager messageManager,
-                           Bird bird, BirdService birdService) {
+    public FrameToDoCreate(ToDoService toDoService, BirdMessageManager messageManager) {
         this.toDoService = toDoService;
         this.messageManager = messageManager;
-        this.bird = bird;
-        this.birdService = birdService;
 
         setTitle("오늘의 할 일 작성");
         setSize(400, 300);
@@ -66,9 +59,6 @@ public class FrameToDoCreate extends JFrame {
             boolean success = toDoService.saveToDo(todo);
 
             if (success) {
-                // ✅ 포인트 적립 → DB 저장까지 포함
-                birdService.addPoint(bird, 10);
-
                 JOptionPane.showMessageDialog(this, "할 일이 저장되었습니다! 포인트 +10 🎉");
                 messageManager.say("멋지게 오늘의 할 일을 작성했어요!");
                 messageManager.speakRandom();

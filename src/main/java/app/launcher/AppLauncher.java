@@ -15,11 +15,16 @@ import java.sql.Connection;
  */
 public class AppLauncher {
     public static void main(String[] args) {
+        // DB 연결
         Connection conn = DatabaseConfig.getConnection();
+
+        // 사용자 서비스 구성
         UserService userService = new UserService(new JdbcUserRepository(conn));
+
+        // 로그인 핸들러 생성
         LoginHandler loginHandler = new LoginHandler(userService);
 
+        // 로그인 프레임 실행
         new FrameLogin(loginHandler);
     }
-
 }

@@ -2,7 +2,7 @@ package attendance.handler;
 
 import attendance.service.AttendanceService;
 import bird.model.Bird;
-import bird.repository.PointManager;
+import bird.point.PointManager;
 import bird.service.BirdService;
 import bird.message.BirdMessageProvider;
 import bird.message.BirdMessageManager;
@@ -48,9 +48,9 @@ public class AttendanceHandler {
         boolean success = attendanceService.checkAttendance(username, today);
 
         if (success) {
-            // ✅ 1. 포인트 적립 + 새 포인트 DB 저장
+            // 1. 포인트 적립
             pointManager.addPoint(10);
-            birdService.addPoint(bird, 10); // DB 반영 포함
+            bird.addPoint(10);
 
             // 2. 배너 메시지 출력
             messageManager.say("출석 완료! 오늘도 멋져요 😊");
@@ -58,15 +58,18 @@ public class AttendanceHandler {
             // 3. 랜덤 응원 메시지 팝업
             messageManager.speakRandom();
 
-            // ✅ 4. 성장 가능성 검사 → DB 저장 포함
+            // 4. 새 성장 가능성 확인 및 성장
             if (birdService.canEvolve(bird)) {
-                birdService.evolve(bird); // 진화 + DB 저장
-                frameBird.refresh();      // 새 UI 갱신
+                birdService.evolve(bird);
+                frameBird.refresh(); // 새 상태 업데이트
+
+                // 성장 축하 메시지
                 messageManager.say("🎉 축하합니다! 새가 성장했습니다! 현재 단계: " + bird.getStage().getName());
             }
 
             return true;
         } else {
+            // 이미 출석한 경우
             JOptionPane.showMessageDialog(parentFrame, "이미 오늘 출석을 완료했습니다!");
             return false;
         }

@@ -3,12 +3,11 @@ package attendance.ui;
 import attendance.handler.AttendanceHandler;
 import attendance.service.AttendanceService;
 import bird.model.Bird;
-import bird.repository.PointManager;
+import bird.point.PointManager;
 import bird.service.BirdService;
 import bird.message.BirdMessageProvider;
 import bird.message.BirdMessageManager;
 import bird.ui.FrameBird;
-import user.session.SessionManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -61,7 +60,7 @@ public class FrameAttendance extends JFrame {
     }
 
     private void handleAttendance() {
-        String username = SessionManager.getCurrentUser().getUsername(); // TODO: 로그인 연동
+        String username = "gyeongsu"; // TODO: 로그인 연동
         LocalDate today = LocalDate.now();
         attendanceHandler.handleAttendance(this, username, today);
     }

@@ -1,6 +1,6 @@
 package todo.service;
 
-import bird.repository.PointManager;
+import bird.point.PointManager;
 import todo.model.ToDo;
 import todo.repository.ToDoRepository;
 
