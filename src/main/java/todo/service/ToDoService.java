@@ -5,16 +5,19 @@ import todo.model.ToDo;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * [ToDoService]
+ * - 할 일 기능을 처리하는 서비스 인터페이스
+ */
 public interface ToDoService {
 
-    boolean saveToDo(ToDo todo);
+    boolean add(ToDo todo);
 
-    ToDo getTodayToDo(String username);
+    boolean hasToDoToday(String username);
 
-    List<ToDo> getAllToDos(String username);
+    ToDo findTodayToDo(String username);
 
-    void deleteToDo(String username, LocalDate date);
+    List<ToDo> findByUsername(String username);
 
-    // ✅ 추가
     void markAsDone(String username, LocalDate date);
 }

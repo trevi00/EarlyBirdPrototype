@@ -1,17 +1,16 @@
 package bird.service;
 
 import bird.model.Bird;
+import bird.repository.BirdRepository;
 
-/**
- * [DefaultBirdService]
- * - BirdService 기본 구현체
- */
 public class DefaultBirdService implements BirdService {
 
-    private StageEvolutionPolicy evolutionPolicy;
+    private final StageEvolutionPolicy evolutionPolicy;
+    private final BirdRepository birdRepository;
 
-    public DefaultBirdService(StageEvolutionPolicy evolutionPolicy) {
+    public DefaultBirdService(StageEvolutionPolicy evolutionPolicy, BirdRepository birdRepository) {
         this.evolutionPolicy = evolutionPolicy;
+        this.birdRepository = birdRepository;
     }
 
     @Override
@@ -22,5 +21,18 @@ public class DefaultBirdService implements BirdService {
     @Override
     public void evolve(Bird bird) {
         evolutionPolicy.evolve(bird);
+    }
+
+    @Override
+    public int getPoint(String username) {
+        Bird bird = birdRepository.findByUsername(username);
+        return bird.getPoint();
+    }
+
+    @Override
+    public void usePoint(String username, int point) {
+        Bird bird = birdRepository.findByUsername(username);
+        bird.addPoint(-point); // 음수로 전달하여 차감
+        birdRepository.save(bird);
     }
 }

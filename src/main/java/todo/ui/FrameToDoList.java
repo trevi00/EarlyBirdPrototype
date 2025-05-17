@@ -3,111 +3,106 @@ package todo.ui;
 import bird.message.BirdMessageManager;
 import todo.model.ToDo;
 import todo.service.ToDoService;
-import user.session.SessionManager;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * [FrameToDoList]
- * - 오늘까지 작성한 할 일 목록을 조회하고,
- * - 선택 항목을 삭제하거나 완료로 표시할 수 있는 화면
+ * - 사용자의 할 일 목록을 조회하고 완료 상태를 수정할 수 있는 화면
  */
 public class FrameToDoList extends JFrame {
 
     private final ToDoService toDoService;
+    private final String username;
     private final BirdMessageManager messageManager;
-    private final DefaultListModel<ToDo> listModel;
+    private final DefaultTableModel tableModel;
+    private final JTable table;
 
-    public FrameToDoList(ToDoService toDoService, BirdMessageManager messageManager) {
+    public FrameToDoList(ToDoService toDoService, String username, BirdMessageManager messageManager) {
         this.toDoService = toDoService;
+        this.username = username;
         this.messageManager = messageManager;
-        this.listModel = new DefaultListModel<>();
 
-        setTitle("할 일 목록");
-        setSize(400, 400);
+        setTitle("할 일 목록 보기");
+        setSize(600, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout(10, 10));
 
-        // 리스트 구성
-        JList<ToDo> toDoJList = new JList<>(listModel);
-        toDoJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        toDoJList.setCellRenderer(new ToDoListCellRenderer());
-
-        // 삭제 버튼
-        JButton btnDelete = new JButton("🗑 삭제하기");
-        btnDelete.addActionListener(e -> {
-            ToDo selected = toDoJList.getSelectedValue();
-            if (selected == null) {
-                JOptionPane.showMessageDialog(this, "삭제할 항목을 선택해주세요.");
-                return;
-            }
-            toDoService.deleteToDo(selected.getUsername(), selected.getDate());
-            listModel.removeElement(selected);
-            JOptionPane.showMessageDialog(this, "삭제 완료!");
-            messageManager.say("할 일을 잘 정리했어요!");
-        });
-
-        // ✅ 완료 표시 버튼
-        JButton btnDone = new JButton("✅ 완료 표시");
-        btnDone.addActionListener(e -> {
-            ToDo selected = toDoJList.getSelectedValue();
-            if (selected == null) {
-                JOptionPane.showMessageDialog(this, "완료할 항목을 선택해주세요.");
-                return;
+        // ✅ 테이블 컬럼 설정
+        String[] columnNames = {"날짜", "제목", "내용", "완료 여부"};
+        tableModel = new DefaultTableModel(columnNames, 0) {
+            // 체크박스 컬럼 (완료 여부)
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 3) return Boolean.class;
+                return String.class;
             }
 
-            toDoService.markAsDone(selected.getUsername(), selected.getDate());
-            JOptionPane.showMessageDialog(this, "✅ 완료 처리되었습니다!");
-            messageManager.say("할 일을 마무리했군요! 잘했어요!");
-            reload(); // 목록 갱신
-        });
+            // 완료 여부만 수정 가능
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 3;
+            }
+        };
 
-        // 버튼 패널
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(btnDelete);
-        buttonPanel.add(btnDone);
+        table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        add(scrollPane, BorderLayout.CENTER);
 
-        loadData();
+        // ✅ 저장 버튼
+        JButton btnSave = new JButton("변경사항 저장");
+        btnSave.addActionListener(e -> handleSave());
+        add(btnSave, BorderLayout.SOUTH);
 
-        add(new JScrollPane(toDoJList), BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        loadToDos();
 
         setVisible(true);
     }
 
-    private void loadData() {
-        String username = SessionManager.getCurrentUser().getUsername();
-        List<ToDo> toDos = toDoService.getAllToDos(username);
-        listModel.clear();
-        toDos.forEach(listModel::addElement);
-    }
+    private void loadToDos() {
+        List<ToDo> list = toDoService.findByUsername(username);
+        tableModel.setRowCount(0); // 초기화
 
-    private void reload() {
-        loadData();
-    }
-
-    /**
-     * 리스트에 출력할 형식 지정
-     */
-    private static class ToDoListCellRenderer extends JLabel implements ListCellRenderer<ToDo> {
-        private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        @Override
-        public Component getListCellRendererComponent(JList<? extends ToDo> list, ToDo value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
-            setText("📅 " + value.getDate().format(formatter) + " - "
-                    + (value.isDone() ? "[완료] " : "") + value.getTitle());
-
-            setOpaque(true);
-            setBackground(isSelected ? new Color(200, 230, 255) : Color.WHITE);
-            setForeground(Color.DARK_GRAY);
-            setFont(new Font("맑은 고딕", Font.PLAIN, 13));
-            setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-            return this;
+        for (ToDo todo : list) {
+            tableModel.addRow(new Object[]{
+                    todo.getDate().toString(),
+                    todo.getTitle(),
+                    todo.getContent(),
+                    todo.isDone()
+            });
         }
+    }
+
+    private void handleSave() {
+        int rowCount = tableModel.getRowCount();
+        int changedCount = 0;
+
+        for (int i = 0; i < rowCount; i++) {
+            String dateStr = (String) tableModel.getValueAt(i, 0);
+            boolean doneChecked = (Boolean) tableModel.getValueAt(i, 3);
+
+            LocalDate date = LocalDate.parse(dateStr);
+            ToDo original = toDoService.findByUsername(username).stream()
+                    .filter(t -> t.getDate().equals(date))
+                    .findFirst()
+                    .orElse(null);
+
+            if (original != null && !original.isDone() && doneChecked) {
+                toDoService.markAsDone(username, date);
+                changedCount++;
+            }
+        }
+
+        if (changedCount > 0) {
+            messageManager.say("✅ " + changedCount + "개의 할 일을 완료 처리했어요!");
+        } else {
+            messageManager.say("📝 변경된 할 일이 없습니다.");
+        }
+
+        loadToDos(); // 새로고침
     }
 }

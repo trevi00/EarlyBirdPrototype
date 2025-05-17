@@ -7,10 +7,6 @@ import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.util.Enumeration;
 
-/**
- * [FrameMain]
- * - EarlyBird 메인 프레임 + 스크롤 패널 적용
- */
 public class FrameMain extends JFrame {
 
     private EarlyBirdContext context;
@@ -27,19 +23,20 @@ public class FrameMain extends JFrame {
         // 전체 시스템 구성
         this.context = new EarlyBirdContext();
 
-        // 메인 메뉴 패널 생성 및 스크롤 적용
-        MainMenuPanel mainPanel = new MainMenuPanel(this, context);
+        // 메인 메뉴 패널 생성
+        MainMenuPanel mainPanel = new MainMenuPanel(context);
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         scrollPane.setBorder(null);
-        setContentPane(scrollPane);
 
+        // 상단 고정 배너 포함한 전체 레이아웃 구성
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(context.getBannerPanel(), BorderLayout.NORTH);  // ✅ context에서 가져온 bannerPanel
+        wrapper.add(scrollPane, BorderLayout.CENTER);
+
+        setContentPane(wrapper);
         setVisible(true);
     }
 
-    /**
-     * 전역 UI 스타일 설정
-     * - 폰트 및 색상 커스터마이징
-     */
     private void setGlobalUIStyle() {
         Font font = new Font("맑은 고딕", Font.PLAIN, 14);
         Enumeration<Object> keys = UIManager.getDefaults().keys();

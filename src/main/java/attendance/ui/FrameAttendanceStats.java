@@ -1,104 +1,58 @@
 package attendance.ui;
 
 import attendance.service.AttendanceStatsService;
-import user.model.User;
-import user.session.SessionManager;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.Set;
+import java.util.List;
 
-/**
- * [FrameAttendanceStats]
- * - 로그인한 사용자의 특정 월 출석 정보를 달력 + 통계로 표시하는 UI
- * - CalendarPanel을 통해 달력 렌더링
- */
 public class FrameAttendanceStats extends JFrame {
 
     private final AttendanceStatsService statsService;
-    private final User user;
-    private YearMonth selectedMonth;
-    private JPanel calendarContainer;
-    private JLabel lblSummary;
+    private final String username;
 
-    /**
-     * 생성자
-     * @param statsService 출석 통계 계산 서비스
-     */
-    public FrameAttendanceStats(AttendanceStatsService statsService) {
+    public FrameAttendanceStats(AttendanceStatsService statsService, String username) {
         this.statsService = statsService;
-        this.user = SessionManager.getCurrentUser();
-        this.selectedMonth = YearMonth.now();
+        this.username = username;
 
-        setTitle("출석 통계");
-        setSize(600, 500);
+        setTitle("출석 통계 📊");
+        setSize(400, 400);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLayout(new BorderLayout());
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         initUI();
-        updateCalendar();
-
-        setVisible(true);
     }
 
-    /**
-     * UI 초기 구성 (상단 월 선택, 중앙 달력, 하단 요약)
-     */
     private void initUI() {
-        // 상단: 월 선택
-        JPanel topPanel = new JPanel();
-        JButton btnPrev = new JButton("◀");
-        JButton btnNext = new JButton("▶");
-        JLabel lblMonth = new JLabel(selectedMonth.toString(), SwingConstants.CENTER);
+        setLayout(new BorderLayout());
 
-        topPanel.add(btnPrev);
-        topPanel.add(lblMonth);
-        topPanel.add(btnNext);
-        add(topPanel, BorderLayout.NORTH);
+        JPanel summaryPanel = new JPanel(new GridLayout(2, 1));
+        int totalDays = statsService.getTotalAttendanceCount(username);
+        LocalDate lastDate = statsService.getLastAttendanceDate(username);
 
-        // 중앙: 달력 위치
-        calendarContainer = new JPanel(new BorderLayout());
-        add(calendarContainer, BorderLayout.CENTER);
+        JLabel totalLabel = new JLabel("총 출석일 수: " + totalDays);
+        JLabel lastLabel = new JLabel("마지막 출석일: " + (lastDate != null ? lastDate.toString() : "없음"));
 
-        // 하단: 요약 정보
-        lblSummary = new JLabel("", SwingConstants.CENTER);
-        lblSummary.setFont(new Font("Serif", Font.BOLD, 14));
-        add(lblSummary, BorderLayout.SOUTH);
+        summaryPanel.add(totalLabel);
+        summaryPanel.add(lastLabel);
 
-        // 이전 월
-        btnPrev.addActionListener(e -> {
-            selectedMonth = selectedMonth.minusMonths(1);
-            lblMonth.setText(selectedMonth.toString());
-            updateCalendar();
-        });
+        add(summaryPanel, BorderLayout.NORTH);
 
-        // 다음 월
-        btnNext.addActionListener(e -> {
-            selectedMonth = selectedMonth.plusMonths(1);
-            lblMonth.setText(selectedMonth.toString());
-            updateCalendar();
-        });
-    }
+        // 출석 날짜 리스트
+        JTextArea textArea = new JTextArea();
+        textArea.setEditable(false);
+        List<LocalDate> dates = statsService.getAllAttendanceDates(username);
+        for (LocalDate date : dates) {
+            textArea.append("- " + date.toString() + "\n");
+        }
 
-    /**
-     * CalendarPanel을 새로 생성하여 중앙에 표시
-     */
-    private void updateCalendar() {
-        calendarContainer.removeAll();
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        add(scrollPane, BorderLayout.CENTER);
 
-        Set<LocalDate> attendanceDays = statsService.getAttendanceDaysInMonth(user.getUsername(), selectedMonth);
-        CalendarPanel panel = new CalendarPanel(selectedMonth, attendanceDays);
-        calendarContainer.add(panel, BorderLayout.CENTER);
-
-        // 요약 정보
-        int attended = attendanceDays.size();
-        int total = selectedMonth.lengthOfMonth();
-        lblSummary.setText(String.format("출석일수: %d일 / %d일  (출석률 %.1f%%)", attended, total, (attended * 100.0 / total)));
-
-        calendarContainer.revalidate();
-        calendarContainer.repaint();
+        // 닫기 버튼
+        JButton closeButton = new JButton("닫기");
+        closeButton.addActionListener(e -> dispose());
+        add(closeButton, BorderLayout.SOUTH);
     }
 }

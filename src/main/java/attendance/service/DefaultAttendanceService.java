@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 /**
  * [DefaultAttendanceService]
- * - 출석 체크 기본 서비스 구현
+ * - 출석 여부 확인 및 저장 로직 구현
  */
 public class DefaultAttendanceService implements AttendanceService {
 
@@ -20,17 +20,13 @@ public class DefaultAttendanceService implements AttendanceService {
     }
 
     @Override
-    public boolean checkAttendance(String username, LocalDate date) {
-        if (attendanceRepository.existsByDate(username, date)) {
+    public boolean checkAttendance(String username, LocalDate today) {
+        if (attendanceRepository.existsByDate(username, today)) {
             return false;
         }
-        attendanceRepository.save(username, date);
-        pointManager.addPoint(10);
-        return true;
-    }
 
-    // ✅ 통계용으로 저장소 접근 허용
-    public AttendanceRepository getRepository() {
-        return attendanceRepository;
+        attendanceRepository.save(username, today);
+        pointManager.addPoint(10); // 출석 시 포인트 적립
+        return true;
     }
 }

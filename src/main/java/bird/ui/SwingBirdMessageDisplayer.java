@@ -26,6 +26,9 @@ public class SwingBirdMessageDisplayer implements BirdMessageDisplayer {
         this.birdIcon = birdIcon;
     }
 
+    /**
+     * 배너 메시지 표시 (상단 영역에 임시 추가)
+     */
     @Override
     public void showBanner(String message) {
         if (parentFrame == null) {
@@ -35,18 +38,39 @@ public class SwingBirdMessageDisplayer implements BirdMessageDisplayer {
 
         Container content = parentFrame.getContentPane();
 
-        // 레이아웃이 BorderLayout이 아닌 경우, 강제 설정
+        // 레이아웃이 BorderLayout이 아닌 경우, 강제로 설정
         if (!(content.getLayout() instanceof BorderLayout)) {
             content.setLayout(new BorderLayout());
         }
 
+        // 기존 배너 제거 (덮어쓰기 방지)
+        for (Component comp : content.getComponents()) {
+            if (comp instanceof BirdBanner) {
+                content.remove(comp);
+                break;
+            }
+        }
+
+        // 새로운 배너 추가
         BirdBanner banner = new BirdBanner(birdIcon, message);
         content.add(banner, BorderLayout.NORTH);
 
         content.revalidate();
         content.repaint();
+
+        // 일정 시간 후 자동 제거
+        Timer timer = new Timer(2500, e -> {
+            content.remove(banner);
+            content.revalidate();
+            content.repaint();
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 
+    /**
+     * 팝업 메시지 출력
+     */
     @Override
     public void speak(String message) {
         if (parentFrame != null) {

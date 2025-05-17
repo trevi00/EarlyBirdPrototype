@@ -2,21 +2,22 @@ package bird.model;
 
 import java.time.LocalDate;
 
-/**
- * [Bird 모델]
- * - 새의 성장 상태를 관리
- * - 포인트를 누적하여 성장
- */
 public class Bird {
 
-    private BirdStage stage; // 현재 성장 단계
-    private int point;       // 현재 포인트
-    private LocalDate bornDate; // 태어난 날짜
+    private String username;     // 🔹 사용자 이름 (새 소유자)
+    private BirdStage stage;
+    private int point;
+    private LocalDate bornDate;
 
-    public Bird() {
+    public Bird(String username) {
+        this.username = username;
         this.stage = BirdStage.EGG;
         this.point = 0;
         this.bornDate = LocalDate.now();
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public BirdStage getStage() {
@@ -31,27 +32,18 @@ public class Bird {
         return bornDate;
     }
 
-    /**
-     * 포인트 추가
-     */
     public void addPoint(int amount) {
         this.point += amount;
     }
 
-    /**
-     * 성장 가능한지 확인
-     */
     public boolean canEvolve() {
         return stage.getNextStage() != null && point >= stage.getNeedPoint();
     }
 
-    /**
-     * 성장시키기
-     */
     public void evolve() {
         if (canEvolve()) {
             this.stage = stage.getNextStage();
-            this.point = 0; // 다음 성장을 위해 포인트 초기화
+            this.point = 0;
         }
     }
 }

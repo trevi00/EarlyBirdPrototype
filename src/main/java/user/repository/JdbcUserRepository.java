@@ -4,11 +4,6 @@ import user.model.User;
 
 import java.sql.*;
 
-/**
- * [JdbcUserRepository]
- * - USERS 테이블과 연동되는 JDBC 기반 저장소
- * - 회원가입 및 로그인 검증 기능을 제공
- */
 public class JdbcUserRepository implements UserRepository {
 
     private final Connection conn;

@@ -1,9 +1,10 @@
 package user.model;
 
 public class User {
-    private String username;
-    private String password;
-    private String displayName;
+
+    private final String username;
+    private final String password;
+    private final String displayName;
 
     public User(String username, String password, String displayName) {
         this.username = username;
@@ -11,7 +12,15 @@ public class User {
         this.displayName = displayName;
     }
 
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
-    public String getDisplayName() { return displayName; }
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
 }

@@ -5,18 +5,19 @@ import todo.model.ToDo;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * [ToDoRepository]
+ * - 할 일 데이터 저장소 인터페이스
+ */
 public interface ToDoRepository {
 
-    void save(ToDo todo);
-
-    ToDo findByUsernameAndDate(String username, LocalDate date);
-
-    List<ToDo> findAllByUsername(String username);
-
-    void delete(String username, LocalDate date);
+    boolean save(ToDo todo);
 
     boolean exists(String username, LocalDate date);
 
-    // ✅ 추가
     void markAsDone(String username, LocalDate date);
+
+    ToDo findByUsernameAndDate(String username, LocalDate date);
+
+    List<ToDo> findByUsername(String username);
 }

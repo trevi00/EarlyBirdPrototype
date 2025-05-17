@@ -5,10 +5,6 @@ import user.service.UserService;
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * [RegisterFrame]
- * - 새로운 사용자 회원가입 UI
- */
 public class RegisterFrame extends JFrame {
 
     public RegisterFrame(UserService userService) {

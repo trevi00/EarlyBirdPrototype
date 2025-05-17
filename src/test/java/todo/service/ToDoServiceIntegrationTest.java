@@ -1,68 +1,83 @@
 package todo.service;
 
+import bird.model.Bird;
+import bird.message.BirdMessageManager;
 import org.junit.jupiter.api.*;
 import todo.model.ToDo;
+import bird.point.PointManager;
 import todo.repository.JdbcToDoRepository;
-import todo.repository.ToDoRepository;
-import bird.model.Bird;
-import bird.repository.BirdRepository;
-import bird.repository.JdbcBirdRepository;
-import bird.service.BirdService;
-import bird.service.DefaultBirdService;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ToDoServiceIntegrationTest {
 
-    private Connection conn;
+    private static Connection conn;
     private ToDoService toDoService;
-    private BirdService birdService;
-    private Bird bird;
+
+    private final String TEST_USERNAME = "test1";
+
+    @BeforeAll
+    static void connect() throws Exception {
+        conn = DriverManager.getConnection(
+                "jdbc:oracle:thin:@localhost:1521/XEPDB1",
+                "overflow",
+                "12345"
+        );
+    }
 
     @BeforeEach
-    public void setUp() throws Exception {
-        // 🔧 DB 연결 설정
-        conn = DriverManager.getConnection(
-                "jdbc:oracle:thin:@localhost:1521:xe", "your_id", "your_pw"
+    void setup() throws Exception {
+        // Clean up old test data
+        try (PreparedStatement pstmt = conn.prepareStatement(
+                "DELETE FROM TODOS WHERE USERNAME = ?")) {
+            pstmt.setString(1, TEST_USERNAME);
+            pstmt.executeUpdate();
+        }
+
+        // Create service
+        toDoService = new DefaultToDoService(
+                new JdbcToDoRepository(conn),
+                new PointManager()
         );
-
-        // 🐦 BirdService 준비 (test1 유저 기준)
-        BirdRepository birdRepo = new JdbcBirdRepository(conn);
-        birdService = new DefaultBirdService(birdRepo);
-        bird = birdService.loadBird("test1");
-
-        // 📋 ToDoService 구성
-        ToDoRepository toDoRepo = new JdbcToDoRepository(conn);
-        toDoService = new DefaultToDoService(toDoRepo, birdService, bird);
     }
 
     @Test
-    public void testSaveToDo_shouldStoreToDoAndGivePoint() {
-        // given
-        String username = "test1";
+    void 할일_등록_조회_완료_통합테스트() {
         LocalDate today = LocalDate.now();
-        ToDo todo = new ToDo(username, today, "JUnit 테스트 할 일", "DB 저장 잘 되는지 확인");
 
-        // when
-        boolean success = toDoService.saveToDo(todo);
+        ToDo todo = new ToDo(
+                UUID.randomUUID().toString(),
+                TEST_USERNAME,
+                today,
+                "통합 테스트 제목",
+                "통합 테스트 내용",
+                false
+        );
 
-        // then
-        assertTrue(success, "할 일 저장이 성공해야 함");
-        ToDo saved = toDoService.getTodayToDo(username);
-        assertNotNull(saved, "DB에 저장된 할 일이 있어야 함");
-        assertEquals("JUnit 테스트 할 일", saved.getTitle());
+        boolean saved = toDoService.add(todo);
+        assertTrue(saved, "할일 등록에 실패했습니다");
 
-        System.out.println("✅ 저장된 할 일: " + saved.getTitle() + " / " + saved.getContent());
-        System.out.println("✅ 현재 포인트: " + bird.getPoint());
+        List<ToDo> list = toDoService.findByUsername(TEST_USERNAME);
+        assertEquals(1, list.size());
+        assertEquals("통합 테스트 제목", list.get(0).getTitle());
+
+        toDoService.markAsDone(TEST_USERNAME, today);
+
+        ToDo updated = toDoService.findTodayToDo(TEST_USERNAME);
+        assertTrue(updated.isDone(), "할일 완료 처리가 반영되지 않았습니다");
     }
 
-    @AfterEach
-    public void cleanUp() throws Exception {
-        conn.prepareStatement("DELETE FROM TODOS WHERE username = 'test1' AND todo_date = TO_DATE(SYSDATE, 'YYYY-MM-DD')").executeUpdate();
-        conn.close();
+    @AfterAll
+    static void close() throws Exception {
+        if (conn != null && !conn.isClosed()) {
+            conn.close();
+        }
     }
 }
